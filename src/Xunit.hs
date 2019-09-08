@@ -33,7 +33,10 @@ summary :: TestResult -> String
 summary (TestResult x) = (show x) ++ " run, 0 failed"
 
 instance TC WasRun where
-  method = testMethod
+  method w =
+    case testCase w of
+      TestCase "testMethod"       -> testMethod w
+      TestCase "testBrokenMethod" -> testMethod w
   setUp x = return x {wasRunLog = "setUp "}
   tearDown x = return x {wasRunLog = (wasRunLog x) ++ "tearDown "}
 
@@ -57,6 +60,7 @@ instance TC TestCaseTest where
     case x of
       "testTemplateMethod" -> testTemplateMethod t
       "testResult"         -> testResult t
+      "testFailedResult"   -> testFailedResult t
   setUp = return
 
 testTemplateMethod _ =
@@ -73,8 +77,16 @@ testResult _ =
     assert ("1 run, 0 failed" == (summary . snd $ result)) dummy
     return x
 
+testFailedResult _ =
+  \x -> do
+    let test = makeWasRun "testBrokenMethod"
+    result <- run test
+    assert ("1 run, 1 failed" == (summary . snd $ result)) dummy
+    return x
+
 dummy = putStr ""
 
 main = do
   run $ TestCaseTest "testTemplateMethod"
   run $ TestCaseTest "testResult"
+  run $ TestCaseTest "testFailedResult"
