@@ -81,43 +81,46 @@ testBrokenMethod :: WasRun -> (WasRun -> IO WasRun)
 testBrokenMethod _ = \x -> assert False (return x)
 
 data TestCaseTest = TestCaseTest
-  { tCTName :: Name
+  { tCTName   :: Name
+  , tCTResult :: TestResult
   }
 
 instance TC TestCaseTest where
-  method t@(TestCaseTest x) =
+  method t@(TestCaseTest x _) =
     case x of
       "testTemplateMethod"         -> testTemplateMethod t
       "testResult"                 -> testResult t
       "testFailedResult"           -> testFailedResult t
       "testFailedResultFormatting" -> testFailedResultFormatting t
       "testSuite"                  -> testSuite t
-  setUp = return
+  setUp t = return $ t {tCTResult = makeTestResult}
+
+makeTestCaseTest name = TestCaseTest name makeTestResult
 
 testTemplateMethod _ =
   \x -> do
     let test = makeWasRun "testMethod"
-    tested <- run test $ makeTestResult
+    tested <- run test $ tCTResult x
     assert ("setUp testMethod tearDown " == (wasRunLog . fst $ tested)) dummy
     return x
 
 testResult _ =
   \x -> do
     let test = makeWasRun "testMethod"
-    result <- run test $ makeTestResult
+    result <- run test $ tCTResult x
     assert ("1 run, 0 failed" == (summary . snd $ result)) dummy
     return x
 
 testFailedResult _ =
   \x -> do
     let test = makeWasRun "testBrokenMethod"
-    result <- run test $ makeTestResult
+    result <- run test $ tCTResult x
     assert ("1 run, 1 failed" == (summary . snd $ result)) dummy
     return x
 
 testFailedResultFormatting _ =
   \x -> do
-    let result = makeTestResult
+    let result = tCTResult x
     let startedResult = testStarted result
     let failedResult = testFailed startedResult
     assert ("1 run, 1 failed" == summary failedResult) dummy
@@ -128,8 +131,7 @@ testSuite _ =
     let suite = TestSuite [] :: TestSuite WasRun
     let suite1 = suiteAdd suite $ makeWasRun "testMethod"
     let suite2 = suiteAdd suite1 $ makeWasRun "testBrokenMethod"
-    let result = makeTestResult
-    suiteRunResult <- suiteRun suite2 result
+    suiteRunResult <- suiteRun suite2 $ tCTResult x
     assert ("2 run, 1 failed" == summary suiteRunResult) dummy
     return x
 
@@ -137,11 +139,11 @@ dummy = putStr ""
 
 main = do
   let suite = TestSuite [] :: TestSuite TestCaseTest
-  let suite1 = suiteAdd suite $ TestCaseTest "testTemplateMethod"
-  let suite2 = suiteAdd suite1 $ TestCaseTest "testResult"
-  let suite3 = suiteAdd suite2 $ TestCaseTest "testFailedResult"
-  let suite4 = suiteAdd suite3 $ TestCaseTest "testFailedResultFormatting"
-  let suite5 = suiteAdd suite4 $ TestCaseTest "testSuite"
+  let suite1 = suiteAdd suite $ makeTestCaseTest "testTemplateMethod"
+  let suite2 = suiteAdd suite1 $ makeTestCaseTest "testResult"
+  let suite3 = suiteAdd suite2 $ makeTestCaseTest "testFailedResult"
+  let suite4 = suiteAdd suite3 $ makeTestCaseTest "testFailedResultFormatting"
+  let suite5 = suiteAdd suite4 $ makeTestCaseTest "testSuite"
   let result = makeTestResult
   runnedResult <- suiteRun suite5 result
   putStrLn $ summary runnedResult
