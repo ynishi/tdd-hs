@@ -31,25 +31,23 @@ testMethod :: WasRun -> (WasRun -> IO WasRun)
 testMethod _ = \x -> return x {wasRunLog = (wasRunLog x) ++ "testMethod "}
 
 data TestCaseTest = TestCaseTest
-  { tCTName   :: Name
-  , tCTWasRun :: WasRun
+  { tCTName :: Name
   }
 
 instance TC TestCaseTest where
-  method t@(TestCaseTest x _) =
+  method t@(TestCaseTest x) =
     case x of
       "testTemplateMethod" -> testTemplateMethod t
-  setUp t = do
-    let newWasRun = makeWasRun "testMethod"
-    return t {tCTWasRun = newWasRun}
+  setUp = return
 
 testTemplateMethod _ =
   \x -> do
-    setUpped <- run $ tCTWasRun x
+    let test = makeWasRun "testMethod"
+    setUpped <- run test
     assert ("setUp testMethod " == wasRunLog setUpped) dummy
-    return x {tCTWasRun = setUpped}
+    return x
 
 dummy = putStr ""
 
 main = do
-  run $ TestCaseTest "testTemplateMethod" EmptyWasRun
+  run $ TestCaseTest "testTemplateMethod"
