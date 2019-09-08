@@ -10,7 +10,7 @@ data TestCase =
 class TC a where
   run :: a -> IO (a, TestResult)
   run x = do
-    let result = TestResult 0
+    let result = TestResult 0 0
     let startedResult = testStarted result
     setUpped <- setUp x
     tested <- method setUpped $ setUpped
@@ -23,14 +23,18 @@ class TC a where
   tearDown = return
 
 data TestResult = TestResult
-  { trRunCount :: Int
+  { trRunCount   :: Int
+  , trErrorCount :: Int
   }
 
 testStarted :: TestResult -> TestResult
-testStarted (TestResult x) = TestResult (x + 1)
+testStarted t = t {trRunCount = (trRunCount t) + 1}
+
+testFailed :: TestResult -> TestResult
+testFailed t = t {trErrorCount = (trErrorCount t) + 1}
 
 summary :: TestResult -> String
-summary (TestResult x) = (show x) ++ " run, 0 failed"
+summary t = (show . trRunCount $ t) ++ " run, 0 failed"
 
 instance TC WasRun where
   method w =
@@ -90,11 +94,10 @@ testFailedResult _ =
 
 testFailedResultFormatting _ =
   \x -> do
-    let result = TestResult 0
+    let result = TestResult 0 0
     let startedResult = testStarted result
     let failedResult = testFailed startedResult
-    return (tearDowned, startedResult)
-    assert ("1 run, 1 failed" == (summary . snd $ result)) dummy
+    assert ("1 run, 1 failed" == summary failedResult) dummy
     return x
 
 dummy = putStr ""
