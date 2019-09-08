@@ -24,6 +24,9 @@ data TestResult = TestResult
   { trRunCount :: Int
   }
 
+testStarted :: TestResult -> TestResult
+testStarted (TestResult x) = TestResult (x + 1)
+
 summary :: TestResult -> String
 summary (TestResult x) = (show x) ++ " run, 0 failed"
 
