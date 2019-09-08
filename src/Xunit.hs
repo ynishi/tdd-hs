@@ -43,6 +43,7 @@ instance TC TestCaseTest where
   method t@(TestCaseTest x) =
     case x of
       "testTemplateMethod" -> testTemplateMethod t
+      "testResult"         -> testResult t
   setUp = return
 
 testTemplateMethod _ =
@@ -52,7 +53,15 @@ testTemplateMethod _ =
     assert ("setUp testMethod tearDown " == wasRunLog tested) dummy
     return x
 
+testResult _ =
+  \x -> do
+    let test = makeWasRun "testMethod"
+    result <- run test
+    assert ("setUp testMethod tearDown " == summary result) dummy
+    return x
+
 dummy = putStr ""
 
 main = do
   run $ TestCaseTest "testTemplateMethod"
+  run $ TestCaseTest "testResult"
