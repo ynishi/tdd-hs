@@ -19,6 +19,12 @@ class TC a where
   tearDown :: a -> IO a
   tearDown = return
 
+data TestResult =
+  TestResult
+
+summary :: TestResult -> String
+summary _ = "1 run, 0 failed"
+
 instance TC WasRun where
   method = testMethod
   setUp x = return x {wasRunLog = "setUp "}
