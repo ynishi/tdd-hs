@@ -21,7 +21,7 @@ data WasRun = WasRun
   }
 
 testMethod :: WasRun -> (WasRun -> IO WasRun)
-testMethod x = (\(WasRun _ _) -> return $ WasRun (testCase x) True)
+testMethod _ = \x -> return $ WasRun (testCase x) True
 
 test = WasRun (TestCase "testMethod") False
 
@@ -31,8 +31,8 @@ data TestCaseTest =
 instance TC TestCaseTest where
   method = testRunning
 
-testRunning x =
-  \_ -> do
+testRunning _ =
+  \x -> do
     assert (not . wasRun $ test) dummy
     tested <- run test
     assert (wasRun tested) dummy
