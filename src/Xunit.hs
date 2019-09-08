@@ -1,6 +1,6 @@
 module Xunit where
 
-data WasRun = WasRun
+data WasRun = WasRun String
 
 test = WasRun "testMethod"
 
