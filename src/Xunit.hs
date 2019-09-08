@@ -14,5 +14,5 @@ test = WasRun "testMethod" False
 
 main = do
   print $ wasRun test
-  tested <- testMethod test
+  tested <- run test
   print $ wasRun tested
