@@ -18,10 +18,14 @@ instance TC WasRun where
 data WasRun = WasRun
   { testCase :: TestCase
   , wasRun   :: Bool
+  , wasSetUp :: Bool
   }
 
+makeWasRun :: Name -> WasRun
+makeWasRun name = WasRun (TestCase name) False False
+
 testMethod :: WasRun -> (WasRun -> IO WasRun)
-testMethod _ = \x -> return $ WasRun (testCase x) True
+testMethod _ = \x -> return $ x {wasRun = True, wasSetUp = True}
 
 data TestCaseTest =
   TestCaseTest Name
@@ -34,7 +38,7 @@ instance TC TestCaseTest where
 
 testRunning _ =
   \x -> do
-    let test = WasRun (TestCase "testMethod") False
+    let test = makeWasRun "testMethod"
     assert (not . wasRun $ test) dummy
     tested <- run test
     assert (wasRun tested) dummy
@@ -42,7 +46,7 @@ testRunning _ =
 
 testSetUp _ =
   \x -> do
-    let test = WasRun (TestCase "testMethod") False
+    let test = makeWasRun "testMethod"
     tested <- run test
     assert (wasSetUp tested) dummy
     return x
