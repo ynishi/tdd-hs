@@ -13,9 +13,13 @@ class TC a where
     let result = TestResult 0 0
     let startedResult = testStarted result
     setUpped <- setUp x
-    tested <- method setUpped $ setUpped
+    (tested, testedResult) <-
+      catch
+        (do tested <- method setUpped $ setUpped
+            return (tested, startedResult))
+        (\(SomeException _) -> return (setUpped, testFailed startedResult))
     tearDowned <- tearDown tested
-    return (tearDowned, startedResult)
+    return (tearDowned, testedResult)
   setUp :: a -> IO a
   setUp = return
   method :: a -> (a -> IO a)
