@@ -1,5 +1,7 @@
 module Xunit where
 
+data WasRun = WasRun
+
 test = WasRun "testMethod"
 
 main = do
