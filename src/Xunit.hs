@@ -17,16 +17,18 @@ class TC a where
 
 instance TC WasRun where
   method = testMethod
-  setUp x = return x {wasRun = False}
+  setUp x = return x {wasRun = False, wasRunLog = "setUp "}
 
 data WasRun
   = WasRun { testCase :: TestCase
            , wasRun   :: Bool
-           , wasSetUp :: Bool }
+           , wasSetUp :: Bool
+           , wasRunLog :: String
+           }
   | EmptyWasRun
 
 makeWasRun :: Name -> WasRun
-makeWasRun name = WasRun (TestCase name) False False
+makeWasRun name = WasRun (TestCase name) False False ""
 
 testMethod :: WasRun -> (WasRun -> IO WasRun)
 testMethod _ = \x -> return x {wasRun = True, wasSetUp = True}
