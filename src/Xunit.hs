@@ -1,23 +1,25 @@
 module Xunit where
 
+data TestCase = TestCase
+
 data WasRun =
-  WasRun String
+  WasRun TestCase String
          (WasRun -> IO WasRun)
          Bool
 
 wasRun :: WasRun -> Bool
-wasRun (WasRun _ _ x) = x
+wasRun (WasRun TestCase _ _ x) = x
 
 testMethod :: WasRun -> IO WasRun
-testMethod (WasRun s f _) = return $ WasRun s f True
+testMethod (WasRun TestCase s f _) = return $ WasRun TestCase s f True
 
 method :: WasRun -> (WasRun -> IO WasRun)
-method (WasRun _ f _) = f
+method (WasRun TestCase _ f _) = f
 
 run :: WasRun -> IO WasRun
 run x = method x $ x
 
-test = WasRun "testMethod" testMethod False
+test = WasRun TestCase "testMethod" testMethod False
 
 main = do
   print $ wasRun test
