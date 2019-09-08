@@ -1,5 +1,7 @@
 module Xunit where
 
+import           Control.Exception
+
 type Name = String
 
 data TestCase =
@@ -23,7 +25,9 @@ testMethod x = (\(WasRun _ _) -> WasRun (testCase x) True)
 
 test = WasRun (TestCase "testMethod") False
 
+dummy = putStr ""
+
 main = do
-  print $ wasRun test
+  assert (not . wasRun $ test) dummy
   tested <- run test
-  print $ wasRun tested
+  assert (wasRun tested) dummy
