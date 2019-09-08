@@ -10,8 +10,11 @@ wasRun (WasRun _ x) = x
 testMethod :: WasRun -> IO WasRun
 testMethod (WasRun s _) = return $ WasRun s True
 
+method :: WasRun -> (WasRun -> IO WasRun)
+method (WasRun "testMethod" _) = testMethod
+
 run :: WasRun -> IO WasRun
-run = testMethod
+run x = method x $ x
 
 test = WasRun "testMethod" False
 
