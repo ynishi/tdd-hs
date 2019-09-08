@@ -56,7 +56,7 @@ testRunning _ =
 testSetUp _ =
   \x -> do
     setUpped <- run $ tCTWasRun x
-    assert (wasSetUp setUpped) dummy
+    assert ("setUp " == wasRunLog setUpped) dummy
     return x {tCTWasRun = setUpped}
 
 dummy = putStr ""
