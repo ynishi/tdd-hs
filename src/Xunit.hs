@@ -26,6 +26,12 @@ class TC a where
   tearDown :: a -> IO a
   tearDown = return
 
+data TestSuite a =
+  TestSuite [a]
+
+suiteAdd :: TC a => TestSuite a -> a -> TestSuite a
+suiteAdd (TestSuite cs) c = TestSuite $ cs ++ [c]
+
 data TestResult = TestResult
   { trRunCount   :: Int
   , trErrorCount :: Int
@@ -108,9 +114,9 @@ testFailedResultFormatting _ =
 
 testSuite _ =
   \x -> do
-    let suite = TestSuite []
-    let suite1 = suiteAdd suite $ WasRun "testMethod"
-    let suite2 = suiteAdd suite1 $ WasRun "testBrokenMethod"
+    let suite = TestSuite [] :: TestSuite WasRun
+    let suite1 = suiteAdd suite $ makeWasRun "testMethod"
+    let suite2 = suiteAdd suite1 $ makeWasRun "testBrokenMethod"
     result <- run suite2
     assert ("2 run, 1 failed" == summary . snd $ result) dummy
     return x
