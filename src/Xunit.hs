@@ -10,10 +10,12 @@ data TestCase =
 class TC a where
   run :: a -> IO (a, TestResult)
   run x = do
+    let result = TestResult 0
+    let startedResult = testStarted result
     setUpped <- setUp x
     tested <- method setUpped $ setUpped
     tearDowned <- tearDown tested
-    return (tearDowned, TestResult 1)
+    return (tearDowned, startedResult)
   setUp :: a -> IO a
   setUp = return
   method :: a -> (a -> IO a)
