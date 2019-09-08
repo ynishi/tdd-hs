@@ -9,11 +9,16 @@ data TestCase =
 
 class TC a where
   run :: a -> IO a
-  run x = method x $ x
+  run x = do
+    setUp x
+    method x $ x
+  setUp :: a -> IO a
+  setUp = return
   method :: a -> (a -> IO a)
 
 instance TC WasRun where
   method = testMethod
+  setUp x = return $ x {wasRun = False}
 
 data WasRun = WasRun
   { testCase :: TestCase
