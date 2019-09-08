@@ -15,7 +15,7 @@ class TC a where
     setUpped <- setUp x
     (tested, testedResult) <-
       catch
-        (do tested <- method setUpped $ setUpped
+        (do tested <- method setUpped setUpped
             return (tested, startedResult))
         (\(SomeException _) -> return (setUpped, testFailed startedResult))
     tearDowned <- tearDown tested
@@ -32,10 +32,10 @@ data TestResult = TestResult
   }
 
 testStarted :: TestResult -> TestResult
-testStarted t = t {trRunCount = (trRunCount t) + 1}
+testStarted t = t {trRunCount = trRunCount t + 1}
 
 testFailed :: TestResult -> TestResult
-testFailed t = t {trErrorCount = (trErrorCount t) + 1}
+testFailed t = t {trErrorCount = trErrorCount t + 1}
 
 summary :: TestResult -> String
 summary t =
@@ -47,7 +47,7 @@ instance TC WasRun where
       TestCase "testMethod"       -> testMethod w
       TestCase "testBrokenMethod" -> testBrokenMethod w
   setUp x = return x {wasRunLog = "setUp "}
-  tearDown x = return x {wasRunLog = (wasRunLog x) ++ "tearDown "}
+  tearDown x = return x {wasRunLog = wasRunLog x ++ "tearDown "}
 
 data WasRun = WasRun
   { testCase  :: TestCase
@@ -58,7 +58,7 @@ makeWasRun :: Name -> WasRun
 makeWasRun name = WasRun (TestCase name) ""
 
 testMethod :: WasRun -> (WasRun -> IO WasRun)
-testMethod _ = \x -> return x {wasRunLog = (wasRunLog x) ++ "testMethod "}
+testMethod _ = \x -> return x {wasRunLog = wasRunLog x ++ "testMethod "}
 
 testBrokenMethod :: WasRun -> (WasRun -> IO WasRun)
 testBrokenMethod _ = \x -> assert False (return x)
