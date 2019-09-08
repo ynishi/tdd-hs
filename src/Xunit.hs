@@ -9,9 +9,8 @@ data TestCase =
   TestCase Name
 
 class TC a where
-  run :: a -> IO (a, TestResult)
-  run x = do
-    let result = TestResult 0 0
+  run :: a -> TestResult -> IO (a, TestResult)
+  run x result = do
     let startedResult = testStarted result
     setUpped <- setUp x
     (tested, testedResult) <-
@@ -33,10 +32,15 @@ data TestSuite a =
 suiteAdd :: TC a => TestSuite a -> a -> TestSuite a
 suiteAdd (TestSuite cs) c = TestSuite $ cs ++ [c]
 
-suiteRun :: TC a => TestSuite a -> IO TestResult
-suiteRun (TestSuite cs) = do
-  let result = TestResult 0 0
-  foldedResult <- foldM (\r c -> run c r) result cs
+suiteRun :: TC a => TestSuite a -> TestResult -> IO TestResult
+suiteRun (TestSuite cs) result = do
+  foldedResult <-
+    foldM
+      (\r c -> do
+         r2 <- run c r
+         return r2)
+      result
+      cs
   return foldedResult
 
 data TestResult = TestResult
