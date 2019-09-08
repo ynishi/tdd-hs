@@ -124,8 +124,9 @@ testSuite _ =
     let suite = TestSuite [] :: TestSuite WasRun
     let suite1 = suiteAdd suite $ makeWasRun "testMethod"
     let suite2 = suiteAdd suite1 $ makeWasRun "testBrokenMethod"
-    result <- suiteRun suite2
-    assert ("2 run, 1 failed" == summary result) dummy
+    let result = TestResult 0 0
+    suiteRunResult <- suiteRun suite2 result
+    assert ("2 run, 1 failed" == summary suiteRunResult) dummy
     return x
 
 dummy = putStr ""
