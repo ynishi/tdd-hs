@@ -3,10 +3,8 @@ module Xunit where
 import           Control.Exception
 import           Control.Monad
 
-type Name = String
-
-data TestCase =
-  TestCase Name
+newtype TestCase a =
+  TestCase (a -> IO a)
 
 class TC a where
   run :: a -> TestResult -> IO (a, TestResult)
@@ -26,7 +24,7 @@ class TC a where
   tearDown :: a -> IO a
   tearDown = return
 
-data TestSuite a =
+newtype TestSuite a =
   TestSuite [a]
 
 suiteAdd :: TC a => TestSuite a -> a -> TestSuite a
@@ -59,91 +57,79 @@ summary t =
   (show . trRunCount $ t) ++ " run, " ++ (show . trErrorCount $ t) ++ " failed"
 
 instance TC WasRun where
-  method w =
-    case testCase w of
-      TestCase "testMethod"       -> testMethod w
-      TestCase "testBrokenMethod" -> testBrokenMethod w
+  method (WasRun (TestCase f) _) = f
   setUp x = return x {wasRunLog = "setUp "}
   tearDown x = return x {wasRunLog = wasRunLog x ++ "tearDown "}
 
 data WasRun = WasRun
-  { testCase  :: TestCase
+  { testCase  :: TestCase WasRun
   , wasRunLog :: String
   }
 
-makeWasRun :: Name -> WasRun
-makeWasRun name = WasRun (TestCase name) ""
+makeWasRun :: (WasRun -> IO WasRun) -> WasRun
+makeWasRun f = WasRun (TestCase f) ""
 
-testMethod :: WasRun -> (WasRun -> IO WasRun)
-testMethod _ = \x -> return x {wasRunLog = wasRunLog x ++ "testMethod "}
+testMethod :: (WasRun -> IO WasRun)
+testMethod x = return x {wasRunLog = wasRunLog x ++ "testMethod "}
 
-testBrokenMethod :: WasRun -> (WasRun -> IO WasRun)
-testBrokenMethod _ = \x -> assert False (return x)
+testBrokenMethod :: (WasRun -> IO WasRun)
+testBrokenMethod = assert False . return
 
 data TestCaseTest = TestCaseTest
-  { tCTName   :: Name
+  { tCTF      :: TestCaseTest -> IO TestCaseTest
   , tCTResult :: TestResult
   }
 
 instance TC TestCaseTest where
-  method t@(TestCaseTest x _) =
-    case x of
-      "testTemplateMethod"         -> testTemplateMethod t
-      "testResult"                 -> testResult t
-      "testFailedResult"           -> testFailedResult t
-      "testFailedResultFormatting" -> testFailedResultFormatting t
-      "testSuite"                  -> testSuite t
+  method (TestCaseTest x _) = x
   setUp t = return $ t {tCTResult = makeTestResult}
 
-makeTestCaseTest name = TestCaseTest name makeTestResult
+makeTestCaseTest f = TestCaseTest f makeTestResult
 
-testTemplateMethod _ =
-  \x -> do
-    let test = makeWasRun "testMethod"
-    tested <- run test $ tCTResult x
-    assert ("setUp testMethod tearDown " == (wasRunLog . fst $ tested)) dummy
-    return x
+testTemplateMethod x = do
+  let test = makeWasRun testMethod
+  tested <- run test $ tCTResult x
+  assert ("setUp testMethod tearDown " == (wasRunLog . fst $ tested)) dummy
+  return x
 
-testResult _ =
-  \x -> do
-    let test = makeWasRun "testMethod"
-    result <- run test $ tCTResult x
-    assert ("1 run, 0 failed" == (summary . snd $ result)) dummy
-    return x
+testResult x = do
+  let test = makeWasRun testMethod
+  result <- run test $ tCTResult x
+  assert ("1 run, 0 failed" == (summary . snd $ result)) dummy
+  return x
 
-testFailedResult _ =
-  \x -> do
-    let test = makeWasRun "testBrokenMethod"
-    result <- run test $ tCTResult x
-    assert ("1 run, 1 failed" == (summary . snd $ result)) dummy
-    return x
+testFailedResult x = do
+  let test = makeWasRun testBrokenMethod
+  result <- run test $ tCTResult x
+  assert ("1 run, 1 failed" == (summary . snd $ result)) dummy
+  return x
 
-testFailedResultFormatting _ =
-  \x -> do
-    let result = tCTResult x
-    let startedResult = testStarted result
-    let failedResult = testFailed startedResult
-    assert ("1 run, 1 failed" == summary failedResult) dummy
-    return x
+testFailedResultFormatting x = do
+  let result = tCTResult x
+  let startedResult = testStarted result
+  let failedResult = testFailed startedResult
+  assert ("1 run, 1 failed" == summary failedResult) dummy
+  return x
 
-testSuite _ =
-  \x -> do
-    let suite = TestSuite [] :: TestSuite WasRun
-    let suite1 = suiteAdd suite $ makeWasRun "testMethod"
-    let suite2 = suiteAdd suite1 $ makeWasRun "testBrokenMethod"
-    suiteRunResult <- suiteRun suite2 $ tCTResult x
-    assert ("2 run, 1 failed" == summary suiteRunResult) dummy
-    return x
+testSuite x = do
+  let suite = TestSuite [] :: TestSuite WasRun
+  let suite1 = suiteAdd suite $ makeWasRun testMethod
+  let suite2 = suiteAdd suite1 $ makeWasRun testBrokenMethod
+  suiteRunResult <- suiteRun suite2 $ tCTResult x
+  assert ("2 run, 1 failed" == summary suiteRunResult) dummy
+  return x
 
 dummy = putStr ""
 
 main = do
-  let suite = TestSuite [] :: TestSuite TestCaseTest
-  let suite1 = suiteAdd suite $ makeTestCaseTest "testTemplateMethod"
-  let suite2 = suiteAdd suite1 $ makeTestCaseTest "testResult"
-  let suite3 = suiteAdd suite2 $ makeTestCaseTest "testFailedResult"
-  let suite4 = suiteAdd suite3 $ makeTestCaseTest "testFailedResultFormatting"
-  let suite5 = suiteAdd suite4 $ makeTestCaseTest "testSuite"
-  let result = makeTestResult
-  runnedResult <- suiteRun suite5 result
-  putStrLn $ summary runnedResult
+  result <- suiteRun suite makeTestResult
+  putStrLn $ summary result
+  where
+    suite =
+      TestSuite . map makeTestCaseTest $
+      [ testTemplateMethod
+      , testResult
+      , testFailedResult
+      , testFailedResultFormatting
+      , testSuite
+      ]
