@@ -104,7 +104,12 @@ testFailedResultFormatting _ =
 dummy = putStr ""
 
 main = do
-  run $ TestCaseTest "testTemplateMethod"
-  run $ TestCaseTest "testResult"
-  -- run $ TestCaseTest "testFailedResult"
-  run $ TestCaseTest "testFailedResultFormatting"
+  resTestTemplateMethod <- run $ TestCaseTest "testTemplateMethod"
+  putStrLn . summary . snd $ resTestTemplateMethod
+  resTestResult <- run $ TestCaseTest "testResult"
+  putStrLn . summary . snd $ resTestResult
+  resTestFailedResult <- run $ TestCaseTest "testFailedResult"
+  putStrLn . summary . snd $ resTestFailedResult
+  resTestFailedResultFormatting <-
+    run $ TestCaseTest "testFailedResultFormatting"
+  putStrLn . summary . snd $ resTestFailedResultFormatting
