@@ -92,4 +92,4 @@ dummy = putStr ""
 main = do
   run $ TestCaseTest "testTemplateMethod"
   run $ TestCaseTest "testResult"
-  run $ TestCaseTest "testFailedResult"
+  -- run $ TestCaseTest "testFailedResult"
