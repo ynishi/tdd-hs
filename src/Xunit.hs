@@ -13,18 +13,19 @@ class TC a where
     setUpped <- setUp x
     tested <- method setUpped $ setUpped
     tearDowned <- tearDown tested
-    return (tearDowned, TestResult)
+    return (tearDowned, TestResult 1)
   setUp :: a -> IO a
   setUp = return
   method :: a -> (a -> IO a)
   tearDown :: a -> IO a
   tearDown = return
 
-data TestResult =
-  TestResult
+data TestResult = TestResult
+  { trRunCount :: Int
+  }
 
 summary :: TestResult -> String
-summary _ = "1 run, 0 failed"
+summary (TestResult x) = (show x) ++ " run, 0 failed"
 
 instance TC WasRun where
   method = testMethod
