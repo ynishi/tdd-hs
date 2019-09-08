@@ -1,6 +1,7 @@
 module Xunit where
 
 import           Control.Exception
+import           Control.Monad
 
 type Name = String
 
@@ -31,6 +32,12 @@ data TestSuite a =
 
 suiteAdd :: TC a => TestSuite a -> a -> TestSuite a
 suiteAdd (TestSuite cs) c = TestSuite $ cs ++ [c]
+
+suiteRun :: TC a => TestSuite a -> IO TestResult
+suiteRun (TestSuite cs) = do
+  let result = TestResult 0 0
+  foldedResult <- foldM (\r c -> run c r) result cs
+  return foldedResult
 
 data TestResult = TestResult
   { trRunCount   :: Int
@@ -117,8 +124,8 @@ testSuite _ =
     let suite = TestSuite [] :: TestSuite WasRun
     let suite1 = suiteAdd suite $ makeWasRun "testMethod"
     let suite2 = suiteAdd suite1 $ makeWasRun "testBrokenMethod"
-    result <- run suite2
-    assert ("2 run, 1 failed" == summary . snd $ result) dummy
+    result <- suiteRun suite2
+    assert ("2 run, 1 failed" == summary result) dummy
     return x
 
 dummy = putStr ""
