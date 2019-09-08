@@ -4,25 +4,26 @@ type Name = String
 
 data TestCase =
   TestCase Name
-           (TestCase -> IO WasRun)
 
-run :: TestCase -> IO WasRun
-run t = method t $ t
+class TC a where
+  run :: a -> IO a
+  run x = return $ (method x) x
+  method :: a -> (a -> a)
 
-method :: TestCase -> (TestCase -> IO WasRun)
-method (TestCase _ f) = f
+instance TC WasRun where
+  method = testMethod
 
 data WasRun = WasRun
   { testCase :: TestCase
   , wasRun   :: Bool
   }
 
-testMethod :: TestCase -> IO WasRun
-testMethod t = return $ WasRun t True
+testMethod :: WasRun -> (WasRun -> WasRun)
+testMethod x = (\(WasRun _ _) -> WasRun (testCase x) True)
 
-test = WasRun (TestCase "testMethod" testMethod) False
+test = WasRun (TestCase "testMethod") False
 
 main = do
   print $ wasRun test
-  tested <- run . testCase $ test
+  tested <- run test
   print $ wasRun tested
