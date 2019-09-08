@@ -11,13 +11,16 @@ class TC a where
   run :: a -> IO a
   run x = do
     setUpped <- setUp x
-    method setUpped $ setUpped
+    tested <- method setUpped $ setUpped
+    tearDown tested
   setUp :: a -> IO a
   method :: a -> (a -> IO a)
+  tearDown :: a -> IO a
 
 instance TC WasRun where
   method = testMethod
   setUp x = return x {wasRunLog = "setUp "}
+  tearDown x = return x {wasRunLog = (wasRunLog x) ++ "tearDown "}
 
 data WasRun
   = WasRun { testCase  :: TestCase
@@ -44,7 +47,7 @@ testTemplateMethod _ =
   \x -> do
     let test = makeWasRun "testMethod"
     setUpped <- run test
-    assert ("setUp testMethod " == wasRunLog setUpped) dummy
+    assert ("setUp testMethod tearDown " == wasRunLog setUpped) dummy
     return x
 
 dummy = putStr ""
