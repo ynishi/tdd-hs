@@ -2,21 +2,22 @@ module Xunit where
 
 data WasRun =
   WasRun String
+         (WasRun -> IO WasRun)
          Bool
 
 wasRun :: WasRun -> Bool
-wasRun (WasRun _ x) = x
+wasRun (WasRun _ _ x) = x
 
 testMethod :: WasRun -> IO WasRun
-testMethod (WasRun s _) = return $ WasRun s True
+testMethod (WasRun s f _) = return $ WasRun s f True
 
 method :: WasRun -> (WasRun -> IO WasRun)
-method (WasRun "testMethod" _) = testMethod
+method (WasRun _ f _) = f
 
 run :: WasRun -> IO WasRun
 run x = method x $ x
 
-test = WasRun "testMethod" False
+test = WasRun "testMethod" testMethod False
 
 main = do
   print $ wasRun test
