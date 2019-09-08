@@ -4,27 +4,25 @@ type Name = String
 
 data TestCase =
   TestCase Name
+           (TestCase -> IO WasRun)
 
-data WasRun =
-  WasRun TestCase
-         (WasRun -> IO WasRun)
-         Bool
+run :: TestCase -> IO WasRun
+run t = method t $ t
 
-wasRun :: WasRun -> Bool
-wasRun (WasRun _ _ x) = x
+method :: TestCase -> (TestCase -> IO WasRun)
+method (TestCase _ f) = f
 
-testMethod :: WasRun -> IO WasRun
-testMethod (WasRun t f _) = return $ WasRun t f True
+data WasRun = WasRun
+  { testCase :: TestCase
+  , wasRun   :: Bool
+  }
 
-method :: WasRun -> (WasRun -> IO WasRun)
-method (WasRun _ f _) = f
+testMethod :: TestCase -> IO WasRun
+testMethod t = return $ WasRun t True
 
-run :: WasRun -> IO WasRun
-run x = method x $ x
-
-test = WasRun (TestCase "testMethod") testMethod False
+test = WasRun (TestCase "testMethod" testMethod) False
 
 main = do
   print $ wasRun test
-  tested <- run test
+  tested <- run . testCase $ test
   print $ wasRun tested
