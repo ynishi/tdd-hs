@@ -9,8 +9,8 @@ data TestCase =
 
 class TC a where
   run :: a -> IO a
-  run x = return $ (method x) x
-  method :: a -> (a -> a)
+  run x = method x $ x
+  method :: a -> (a -> IO a)
 
 instance TC WasRun where
   method = testMethod
@@ -20,14 +20,24 @@ data WasRun = WasRun
   , wasRun   :: Bool
   }
 
-testMethod :: WasRun -> (WasRun -> WasRun)
-testMethod x = (\(WasRun _ _) -> WasRun (testCase x) True)
+testMethod :: WasRun -> (WasRun -> IO WasRun)
+testMethod x = (\(WasRun _ _) -> return $ WasRun (testCase x) True)
 
 test = WasRun (TestCase "testMethod") False
 
+data TestCaseTest =
+  TestCaseTest Name
+
+instance TC TestCaseTest where
+  method = testRunning
+
+testRunning x =
+  \_ -> do
+    assert (not . wasRun $ test) dummy
+    tested <- run test
+    assert (wasRun tested) dummy
+    return x
+
 dummy = putStr ""
 
-main = do
-  assert (not . wasRun $ test) dummy
-  tested <- run test
-  assert (wasRun tested) dummy
+main = run $ TestCaseTest "testRunning"
