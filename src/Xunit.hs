@@ -10,54 +10,55 @@ data TestCase =
 class TC a where
   run :: a -> IO a
   run x = do
-    setUp x
-    method x $ x
+    setUpped <- setUp x
+    method setUpped $ setUpped
   setUp :: a -> IO a
-  setUp = return
   method :: a -> (a -> IO a)
 
 instance TC WasRun where
   method = testMethod
-  setUp x = return $ x {wasRun = False}
+  setUp x = return x {wasRun = False}
 
-data WasRun = WasRun
-  { testCase :: TestCase
-  , wasRun   :: Bool
-  , wasSetUp :: Bool
-  }
+data WasRun
+  = WasRun { testCase :: TestCase
+           , wasRun   :: Bool
+           , wasSetUp :: Bool }
+  | EmptyWasRun
 
 makeWasRun :: Name -> WasRun
 makeWasRun name = WasRun (TestCase name) False False
 
 testMethod :: WasRun -> (WasRun -> IO WasRun)
-testMethod _ = \x -> return $ x {wasRun = True, wasSetUp = True}
+testMethod _ = \x -> return x {wasRun = True, wasSetUp = True}
 
-data TestCaseTest =
-  TestCaseTest Name
+data TestCaseTest = TestCaseTest
+  { tCTName   :: Name
+  , tCTWasRun :: WasRun
+  }
 
 instance TC TestCaseTest where
-  method t@(TestCaseTest x) =
+  method t@(TestCaseTest x _) =
     case x of
       "testRunning" -> testRunning t
       "testSetUp"   -> testSetUp t
+  setUp t = do
+    let newWasRun = makeWasRun "testMethod"
+    return t {tCTWasRun = newWasRun}
 
 testRunning _ =
   \x -> do
-    let test = makeWasRun "testMethod"
-    assert (not . wasRun $ test) dummy
-    tested <- run test
+    tested <- run $ tCTWasRun x
     assert (wasRun tested) dummy
-    return x
+    return x {tCTWasRun = tested}
 
 testSetUp _ =
   \x -> do
-    let test = makeWasRun "testMethod"
-    tested <- run test
-    assert (wasSetUp tested) dummy
-    return x
+    setUpped <- run $ tCTWasRun x
+    assert (wasSetUp setUpped) dummy
+    return x {tCTWasRun = setUpped}
 
 dummy = putStr ""
 
 main = do
-  run $ TestCaseTest "testRunning"
-  run $ TestCaseTest "testSetUp"
+  run $ TestCaseTest "testRunning" EmptyWasRun
+  run $ TestCaseTest "testSetUp" EmptyWasRun
