@@ -40,19 +40,12 @@ data TestCaseTest = TestCaseTest
 instance TC TestCaseTest where
   method t@(TestCaseTest x _) =
     case x of
-      "testRunning" -> testRunning t
-      "testSetUp"   -> testSetUp t
+      "testTemplateMethod" -> testTemplateMethod t
   setUp t = do
     let newWasRun = makeWasRun "testMethod"
     return t {tCTWasRun = newWasRun}
 
-testRunning _ =
-  \x -> do
-    tested <- run $ tCTWasRun x
-    assert (wasRun tested) dummy
-    return x {tCTWasRun = tested}
-
-testSetUp _ =
+testTemplateMethod _ =
   \x -> do
     setUpped <- run $ tCTWasRun x
     assert ("setUp testMethod " == wasRunLog setUpped) dummy
@@ -61,5 +54,4 @@ testSetUp _ =
 dummy = putStr ""
 
 main = do
-  run $ TestCaseTest "testRunning" EmptyWasRun
-  run $ TestCaseTest "testSetUp" EmptyWasRun
+  run $ TestCaseTest "testTemplateMethod" EmptyWasRun
