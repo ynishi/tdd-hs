@@ -14,8 +14,10 @@ class TC a where
     tested <- method setUpped $ setUpped
     tearDown tested
   setUp :: a -> IO a
+  setUp = return
   method :: a -> (a -> IO a)
   tearDown :: a -> IO a
+  tearDown = return
 
 instance TC WasRun where
   method = testMethod
