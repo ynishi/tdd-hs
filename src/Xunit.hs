@@ -24,9 +24,10 @@ instance TC WasRun where
   setUp x = return x {wasRunLog = "setUp "}
   tearDown x = return x {wasRunLog = (wasRunLog x) ++ "tearDown "}
 
-data WasRun
-  = WasRun { testCase  :: TestCase
-           , wasRunLog :: String }
+data WasRun = WasRun
+  { testCase  :: TestCase
+  , wasRunLog :: String
+  }
 
 makeWasRun :: Name -> WasRun
 makeWasRun name = WasRun (TestCase name) ""
