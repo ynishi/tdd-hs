@@ -34,7 +34,8 @@ testFailed :: TestResult -> TestResult
 testFailed t = t {trErrorCount = (trErrorCount t) + 1}
 
 summary :: TestResult -> String
-summary t = (show . trRunCount $ t) ++ " run, 0 failed"
+summary t =
+  (show . trRunCount $ t) ++ " run, " ++ (show . trErrorCount $ t) ++ " failed"
 
 instance TC WasRun where
   method w =
