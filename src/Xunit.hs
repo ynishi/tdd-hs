@@ -74,6 +74,7 @@ instance TC TestCaseTest where
       "testResult"                 -> testResult t
       "testFailedResult"           -> testFailedResult t
       "testFailedResultFormatting" -> testFailedResultFormatting t
+      "testSuite"                  -> testSuite t
   setUp = return
 
 testTemplateMethod _ =
@@ -105,6 +106,15 @@ testFailedResultFormatting _ =
     assert ("1 run, 1 failed" == summary failedResult) dummy
     return x
 
+testSuite _ =
+  \x -> do
+    let suite = TestSuite []
+    let suite1 = suiteAdd suite $ WasRun "testMethod"
+    let suite2 = suiteAdd suite1 $ WasRun "testBrokenMethod"
+    result <- run suite2
+    assert ("2 run, 1 failed" == summary . snd $ result) dummy
+    return x
+
 dummy = putStr ""
 
 main = do
@@ -117,3 +127,5 @@ main = do
   resTestFailedResultFormatting <-
     run $ TestCaseTest "testFailedResultFormatting"
   putStrLn . summary . snd $ resTestFailedResultFormatting
+  resTestSuite <- run $ TestCaseTest "testSuite"
+  putStrLn . summary . snd $ resTestSuite
