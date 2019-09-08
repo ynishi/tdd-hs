@@ -36,7 +36,7 @@ instance TC WasRun where
   method w =
     case testCase w of
       TestCase "testMethod"       -> testMethod w
-      TestCase "testBrokenMethod" -> testMethod w
+      TestCase "testBrokenMethod" -> testBrokenMethod w
   setUp x = return x {wasRunLog = "setUp "}
   tearDown x = return x {wasRunLog = (wasRunLog x) ++ "tearDown "}
 
@@ -50,6 +50,9 @@ makeWasRun name = WasRun (TestCase name) ""
 
 testMethod :: WasRun -> (WasRun -> IO WasRun)
 testMethod _ = \x -> return x {wasRunLog = (wasRunLog x) ++ "testMethod "}
+
+testBrokenMethod :: WasRun -> (WasRun -> IO WasRun)
+testBrokenMethod _ = \x -> assert False (return x)
 
 data TestCaseTest = TestCaseTest
   { tCTName :: Name
