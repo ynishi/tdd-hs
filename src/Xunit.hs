@@ -61,9 +61,10 @@ data TestCaseTest = TestCaseTest
 instance TC TestCaseTest where
   method t@(TestCaseTest x) =
     case x of
-      "testTemplateMethod" -> testTemplateMethod t
-      "testResult"         -> testResult t
-      "testFailedResult"   -> testFailedResult t
+      "testTemplateMethod"         -> testTemplateMethod t
+      "testResult"                 -> testResult t
+      "testFailedResult"           -> testFailedResult t
+      "testFailedResultFormatting" -> testFailedResultFormatting t
   setUp = return
 
 testTemplateMethod _ =
@@ -87,9 +88,19 @@ testFailedResult _ =
     assert ("1 run, 1 failed" == (summary . snd $ result)) dummy
     return x
 
+testFailedResultFormatting _ =
+  \x -> do
+    let result = TestResult 0
+    let startedResult = testStarted result
+    let failedResult = testFailed startedResult
+    return (tearDowned, startedResult)
+    assert ("1 run, 1 failed" == (summary . snd $ result)) dummy
+    return x
+
 dummy = putStr ""
 
 main = do
   run $ TestCaseTest "testTemplateMethod"
   run $ TestCaseTest "testResult"
   -- run $ TestCaseTest "testFailedResult"
+  run $ TestCaseTest "testFailedResultFormatting"
