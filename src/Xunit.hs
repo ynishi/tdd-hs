@@ -27,7 +27,6 @@ instance TC WasRun where
 data WasRun
   = WasRun { testCase  :: TestCase
            , wasRunLog :: String }
-  | EmptyWasRun
 
 makeWasRun :: Name -> WasRun
 makeWasRun name = WasRun (TestCase name) ""
@@ -48,8 +47,8 @@ instance TC TestCaseTest where
 testTemplateMethod _ =
   \x -> do
     let test = makeWasRun "testMethod"
-    setUpped <- run test
-    assert ("setUp testMethod tearDown " == wasRunLog setUpped) dummy
+    tested <- run test
+    assert ("setUp testMethod tearDown " == wasRunLog tested) dummy
     return x
 
 dummy = putStr ""
