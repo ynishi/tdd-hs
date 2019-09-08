@@ -1,16 +1,18 @@
 module Xunit where
 
-data WasRun = WasRun String
+data WasRun =
+  WasRun String
+         Bool
 
 wasRun :: WasRun -> Bool
-wasRun _ = False
+wasRun (WasRun _ x) = x
 
 testMethod :: WasRun -> IO WasRun
-testMethod x = return x
+testMethod (WasRun s _) = return $ WasRun s True
 
-test = WasRun "testMethod"
+test = WasRun "testMethod" False
 
 main = do
   print $ wasRun test
-  testMethod test
-  print $ wasRun test
+  tested <- testMethod test
+  print $ wasRun tested
