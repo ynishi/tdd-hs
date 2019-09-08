@@ -20,18 +20,17 @@ instance TC WasRun where
   setUp x = return x {wasRun = False, wasRunLog = "setUp "}
 
 data WasRun
-  = WasRun { testCase :: TestCase
-           , wasRun   :: Bool
-           , wasSetUp :: Bool
-           , wasRunLog :: String
-           }
+  = WasRun { testCase  :: TestCase
+           , wasRun    :: Bool
+           , wasRunLog :: String }
   | EmptyWasRun
 
 makeWasRun :: Name -> WasRun
-makeWasRun name = WasRun (TestCase name) False False ""
+makeWasRun name = WasRun (TestCase name) False ""
 
 testMethod :: WasRun -> (WasRun -> IO WasRun)
-testMethod _ = \x -> return x {wasRun = True, wasSetUp = True}
+testMethod _ =
+  \x -> return x {wasRun = True, wasRunLog = (wasRunLog x) ++ "testMethod "}
 
 data TestCaseTest = TestCaseTest
   { tCTName   :: Name
