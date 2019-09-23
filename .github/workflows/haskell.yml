@@ -1,19 +1,15 @@
-name: Haskell CI
+name: Haskell Stack CI
 
 on: [push]
 
 jobs:
   build:
    
-    runs-on: ubuntu-latest
+    runs-on: fpco/stack-build
 
     steps:
     - uses: actions/checkout@v1
-    - name: Install dependencies
-      run: cabal install --only-dependencies --enable-tests
     - name: Build
-      run: |
-        cabal configure --enable-tests
-        cabal build
+      run: stack --system-ghc build
     - name: Run tests
-      run: cabal test
+      run: stack --system-ghc test
