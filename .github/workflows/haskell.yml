@@ -14,6 +14,6 @@ jobs:
     - name: Setup
       run: stack setup
     - name: Build
-      run: stack --system-ghc build
+      run: stack build
     - name: Run tests
-      run: stack --system-ghc test
+      run: stack test
