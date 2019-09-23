@@ -5,10 +5,14 @@ on: [push]
 jobs:
   build:
    
-    runs-on: fpco/stack-build
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v1
+    - name: Install stack
+      run: curl -sSL https://get.haskellstack.org/ | sh
+    - name: Setup
+      run: stack setup
     - name: Build
       run: stack --system-ghc build
     - name: Run tests
